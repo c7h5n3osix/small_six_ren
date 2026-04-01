@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>小六壬起课</title>
+  <style>
+    :root {
+      --bg: #dbe8f8;
+      --panel: rgba(246, 251, 255, 0.88);
+      --panel-strong: #f7fbff;
+      --text: #16314c;
+      --muted: #587089;
+      --line: rgba(55, 99, 146, 0.18);
+      --accent: #1d63a7;
+      --accent-soft: rgba(29, 99, 167, 0.12);
+      --gold: #5da2e0;
+      --shadow: 0 18px 40px rgba(33, 74, 119, 0.14);
+      --radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "PingFang SC", "Hiragino Sans GB", "Noto Serif SC", "Microsoft YaHei", serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(93, 162, 224, 0.22), transparent 36%),
+        radial-gradient(circle at bottom right, rgba(29, 99, 167, 0.16), transparent 34%),
+        linear-gradient(180deg, #eef6ff 0%, #dceaf7 100%);
+      padding: 24px 14px 40px;
+    }
+
+    .app {
+      width: min(100%, 760px);
+      margin: 0 auto;
+    }
+
+    .hero,
+    .panel,
+    .result-card {
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 24px 18px 22px;
+      margin-bottom: 16px;
+    }
+
+    .hero::before,
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 130px;
+      height: 130px;
+      border: 1px solid rgba(93, 162, 224, 0.28);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .hero::before {
+      top: -46px;
+      right: -18px;
+    }
+
+    .hero::after {
+      bottom: -62px;
+      left: -34px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+    }
+
+    h1 {
+      margin: 14px 0 8px;
+      font-size: clamp(28px, 6vw, 40px);
+      line-height: 1.1;
+      font-weight: 700;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .panel {
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .controls {
+      display: grid;
+      gap: 10px;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    button {
+      appearance: none;
+      border: none;
+      border-radius: 16px;
+      padding: 15px 14px;
+      font: inherit;
+      font-size: 15px;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    button:active {
+      transform: translateY(1px) scale(0.996);
+    }
+
+    .primary {
+      background: linear-gradient(135deg, #3f89d4 0%, #1d63a7 100%);
+      color: #f6fbff;
+      box-shadow: 0 10px 24px rgba(29, 99, 167, 0.28);
+    }
+
+    .secondary {
+      background: var(--panel-strong);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .random-box {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(93, 162, 224, 0.08);
+      border: 1px dashed rgba(93, 162, 224, 0.38);
+    }
+
+    .random-numbers {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      min-width: 62px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: #eef7ff;
+      border: 1px solid rgba(93, 162, 224, 0.3);
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .result-card {
+      padding: 18px 16px;
+      display: none;
+    }
+
+    .result-card.show {
+      display: block;
+      animation: rise 0.35s ease;
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(159, 43, 31, 0.1);
+      color: var(--accent);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+
+    .result-top {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .result-name {
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0.04em;
+    }
+
+    .summary {
+      font-size: 15px;
+      line-height: 1.8;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .stat {
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(255, 249, 238, 0.95);
+      border: 1px solid var(--line);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .analysis-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .analysis-item {
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(255, 252, 244, 0.9);
+      border: 1px solid var(--line);
+    }
+
+    .analysis-item strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 13px;
+      color: var(--accent);
+    }
+
+    .analysis-item span {
+      display: block;
+      line-height: 1.7;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .footer-note {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 560px) {
+      body {
+        padding-inline: 10px;
+      }
+
+      .button-row,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .result-name {
+        font-size: 26px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hero">
+      <div class="eyebrow">纯本地运行 · 适合手机使用</div>
+      <h1>小六壬起课</h1>
+      <p>
+        提供两种方式：按当前时间起课，或随机生成三个数字起课。农历换算与结果计算均在本机完成，不依赖网络。
+      </p>
+    </section>
+
+    <section class="panel">
+      <h2 class="section-title">起课方式</h2>
+      <div class="controls">
+        <div class="button-row">
+          <button class="primary" id="timeBtn">使用当前时间起课</button>
+          <button class="secondary" id="randomBtn">随机三个数字起课</button>
+        </div>
+
+        <div class="random-box" id="randomBox" hidden>
+          <div class="random-numbers">
+            <div class="pill" id="randomMonth">月数 -</div>
+            <div class="pill" id="randomDay">日数 -</div>
+            <div class="pill" id="randomHour">时数 -</div>
+          </div>
+          <p class="hint">随机三数规则：第一个数字按月数 1-12，第二个数字按日数 1-30，第三个数字按时数 1-12，沿用同一套月日时顺推法。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="result-card" id="resultCard">
+      <div class="badge" id="modeBadge">当前时间起课</div>
+
+      <div class="result-top">
+        <div class="result-name" id="finalName">-</div>
+        <div class="summary" id="summaryText">请先选择一种起课方式。</div>
+      </div>
+
+      <div class="grid">
+        <div class="stat">
+          <div class="stat-label">公历时间</div>
+          <div class="stat-value" id="solarText">-</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">农历 / 时辰</div>
+          <div class="stat-value" id="lunarText">-</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">月落点</div>
+          <div class="stat-value" id="monthPoint">-</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">日落点</div>
+          <div class="stat-value" id="dayPoint">-</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">时落点</div>
+          <div class="stat-value" id="hourPoint">-</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">吉凶倾向</div>
+          <div class="stat-value" id="fortuneText">-</div>
+        </div>
+      </div>
+
+      <div class="analysis-list">
+        <div class="analysis-item">
+          <strong>行动建议</strong>
+          <span id="adviceText">-</span>
+        </div>
+        <div class="analysis-item">
+          <strong>失物方位</strong>
+          <span id="lostText">-</span>
+        </div>
+        <div class="analysis-item">
+          <strong>五行 / 方位</strong>
+          <span id="metaText">-</span>
+        </div>
+        <div class="analysis-item">
+          <strong>事项分析</strong>
+          <span id="careerText">-</span>
+        </div>
+        <div class="analysis-item">
+          <strong>感情与人际</strong>
+          <span id="relationText">-</span>
+        </div>
+        <div class="analysis-item">
+          <strong>健康与出行</strong>
+          <span id="healthText">-</span>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        本页仅作传统文化工具与日常参考，不替代医疗、法律、投资等专业判断。
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const LIUREN_ORDER = ["大安", "留连", "速喜", "赤口", "小吉", "空亡"];
+    const SHICHEN_NAMES = ["子时", "丑时", "寅时", "卯时", "辰时", "巳时", "午时", "未时", "申时", "酉时", "戌时", "亥时"];
+    const CN_MONTHS = ["正月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "冬月", "腊月"];
+    const CN_DAYS = [
+      "初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
+      "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
+      "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"
+    ];
+    const CN_MONTH_DIGITS = {
+      "正": 1, "一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6,
+      "七": 7, "八": 8, "九": 9, "十": 10, "冬": 11, "腊": 12, "十一": 11, "十二": 12
+    };
+    const CN_DAY_DIGITS = {
+      "初一": 1, "初二": 2, "初三": 3, "初四": 4, "初五": 5, "初六": 6, "初七": 7, "初八": 8, "初九": 9, "初十": 10,
+      "十一": 11, "十二": 12, "十三": 13, "十四": 14, "十五": 15, "十六": 16, "十七": 17, "十八": 18, "十九": 19, "二十": 20,
+      "廿一": 21, "廿二": 22, "廿三": 23, "廿四": 24, "廿五": 25, "廿六": 26, "廿七": 27, "廿八": 28, "廿九": 29, "三十": 30
+    };
+
+    const RESULT_DATA = {
+      "大安": {
+        name: "大安",
+        tendency: "整体偏稳，适合推进常规事务。",
+        advice: "按原计划执行，优先处理确定性高、节奏清楚的事项。",
+        element: "五行属木，方位偏东方，主稳、主守、主安定。",
+        career: "适合推进已有安排、常规事务、日常协调；若问事业财运，宜循序落实，不宜贪快。",
+        relation: "人际与感情整体平稳，适合正常沟通、温和表达，重在守信与落实。",
+        health: "宜保持作息规律，出行多为平顺，适合按计划行动。",
+        lost: "多看东方、原位、常放置处，或桌面、柜面等较显眼位置。",
+        summary: "气势平和，成事以稳为先。"
+      },
+      "留连": {
+        name: "留连",
+        tendency: "进展偏慢，容易出现拖延与反复。",
+        advice: "先补齐信息与准备，不宜急催，适合稳住节奏。",
+        element: "五行偏水土，方位偏东南，主牵绊、反复、延迟。",
+        career: "合作、审批、回款、推进类事项容易拖住；先理清条件与细节，效果更稳。",
+        relation: "情绪与关系易出现犹疑或反复，宜多确认彼此想法，少做仓促判断。",
+        health: "宜留意疲惫、郁滞感；出行可能有等待、绕路、延时情况。",
+        lost: "宜查东南方、抽屉夹层、包内侧、角落或被杂物遮挡之处。",
+        summary: "眼下不宜硬推，先整备再动更合适。"
+      },
+      "速喜": {
+        name: "速喜",
+        tendency: "事情有较快推进的倾向，利于沟通与反馈。",
+        advice: "把握窗口期，及时联系、确认和落实关键事项。",
+        element: "五行属火，方位偏南，主消息、主喜、主快进展。",
+        career: "利联络、签约、确认、求回音，适合乘势推进；但仍要注意细节收口。",
+        relation: "感情与人际较有热度，适合表达、见面、回应，但避免过度乐观。",
+        health: "适合快办快决的出行与日常安排；注意节奏，防止心急上火。",
+        lost: "可先查南方、明亮处、常活动区域，或近期刚拿过、刚放下的位置。",
+        summary: "有回应、有消息，宜顺势落实。"
+      },
+      "赤口": {
+        name: "赤口",
+        tendency: "容易出现口舌分歧或判断偏急。",
+        advice: "表达尽量简洁克制，重要事项先复核再决定。",
+        element: "五行属金，方位偏西，主争执、主冲突、主口舌是非。",
+        career: "若问合作、谈判、合同、竞争，需防意见相左或沟通失准，宜保留证据与边界。",
+        relation: "人际关系容易因语气、误解、立场不同而起摩擦，适合慢一点说清楚。",
+        health: "出行与行动宜注意磕碰、急躁；作息上注意降火与缓和情绪。",
+        lost: "先找西方、金属器物旁、门边、车内，或容易磕碰挪动的位置。",
+        summary: "少争一分，多核一层，能减轻波动。"
+      },
+      "小吉": {
+        name: "小吉",
+        tendency: "整体较顺，适合处理日常事务与细节安排。",
+        advice: "先做手头可落地的部分，稳步推进比冒进更合适。",
+        element: "五行偏水木，方位偏西北，主助力、主小成、主渐入佳境。",
+        career: "适合日常推进、资源协调、求助协作；若问财务，多为小利渐进，不宜冒险。",
+        relation: "关系层面较有缓和与互助意味，适合温和靠近、慢慢增进信任。",
+        health: "状态通常较平稳，出行宜按计划进行，适合办理常规事项。",
+        lost: "宜查西北方、随身物品附近、收纳盒、衣物口袋或有人帮忙整理过的地方。",
+        summary: "虽非大开大合，但多有助力，可稳中求进。"
+      },
+      "空亡": {
+        name: "空亡",
+        tendency: "结果不易落实，短期内可能有落空或等待感。",
+        advice: "先观察形势，暂缓强推，适合留出余地与备选方案。",
+        element: "五行属土，方位偏北，主空转、主虚耗、主待机观望。",
+        career: "若问项目、回音、求财、落地，多有未定、延后、落空之象，宜设第二方案。",
+        relation: "情感与人际层面容易出现距离感、无回应或不落地，适合少执着、多观察。",
+        health: "宜收敛精力、减少无效奔波；出行与办事尽量先确认再行动。",
+        lost: "可查北方、阴暗处、高低落差处、久未整理处，也要考虑是否暂时不在身边。",
+        summary: "此时不宜强求，留白与等待反而更稳。"
+      }
+    };
+
+    const els = {
+      resultCard: document.getElementById("resultCard"),
+      modeBadge: document.getElementById("modeBadge"),
+      finalName: document.getElementById("finalName"),
+      summaryText: document.getElementById("summaryText"),
+      solarText: document.getElementById("solarText"),
+      lunarText: document.getElementById("lunarText"),
+      monthPoint: document.getElementById("monthPoint"),
+      dayPoint: document.getElementById("dayPoint"),
+      hourPoint: document.getElementById("hourPoint"),
+      fortuneText: document.getElementById("fortuneText"),
+      adviceText: document.getElementById("adviceText"),
+      metaText: document.getElementById("metaText"),
+      careerText: document.getElementById("careerText"),
+      relationText: document.getElementById("relationText"),
+      healthText: document.getElementById("healthText"),
+      randomBox: document.getElementById("randomBox"),
+      randomMonth: document.getElementById("randomMonth"),
+      randomDay: document.getElementById("randomDay"),
+      randomHour: document.getElementById("randomHour"),
+      timeBtn: document.getElementById("timeBtn"),
+      randomBtn: document.getElementById("randomBtn")
+    };
+
+    function mod(value, divisor) {
+      return ((value % divisor) + divisor) % divisor;
+    }
+
+    function getShichenIndex(hour) {
+      if (hour === 23 || hour === 0) return 1;
+      return Math.floor((hour + 1) / 2) + 1;
+    }
+
+    function formatSolar(date) {
+      return new Intl.DateTimeFormat("zh-CN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      }).format(date).replace(/\//g, "-");
+    }
+
+    function parseChineseMonth(monthText) {
+      let value = monthText.replace("闰", "").replace("月", "");
+      if (CN_MONTH_DIGITS[value] != null) return CN_MONTH_DIGITS[value];
+      if (/^\d+$/.test(value)) return Number(value);
+      return null;
+    }
+
+    function parseChineseDay(dayText) {
+      if (CN_DAY_DIGITS[dayText] != null) return CN_DAY_DIGITS[dayText];
+      const match = dayText.match(/\d+/);
+      return match ? Number(match[0]) : null;
+    }
+
+    function getLunarInfo(date) {
+      const formatter = new Intl.DateTimeFormat("zh-CN-u-ca-chinese", {
+        month: "long",
+        day: "long"
+      });
+      const parts = typeof formatter.formatToParts === "function" ? formatter.formatToParts(date) : [];
+      let monthText = parts.find((part) => part.type === "month")?.value;
+      let dayText = parts.find((part) => part.type === "day")?.value;
+
+      if (!monthText || !dayText) {
+        const text = formatter.format(date);
+        const match = text.match(/(闰?[正一二三四五六七八九十冬腊十一十二\d]+月)([初十廿三一二四五六七八九\d]+)/);
+        if (!match) {
+          throw new Error("当前浏览器无法提取农历信息");
+        }
+        monthText = match[1];
+        dayText = match[2];
+      }
+
+      const monthNumber = parseChineseMonth(monthText);
+      const dayNumber = parseChineseDay(dayText);
+
+      if (!monthNumber || !dayNumber) {
+        throw new Error("当前浏览器返回的农历格式无法识别");
+      }
+
+      return {
+        monthNumber,
+        dayNumber,
+        monthText,
+        dayText,
+        isLeap: monthText.startsWith("闰")
+      };
+    }
+
+    function calculateLiuren(monthNumber, dayNumber, shichenNumber) {
+      const monthIndex0 = mod(monthNumber - 1, 6);
+      const dayIndex0 = mod(monthIndex0 + dayNumber - 1, 6);
+      const hourIndex0 = mod(dayIndex0 + shichenNumber - 1, 6);
+
+      return {
+        monthPoint: LIUREN_ORDER[monthIndex0],
+        dayPoint: LIUREN_ORDER[dayIndex0],
+        hourPoint: LIUREN_ORDER[hourIndex0],
+        finalResult: LIUREN_ORDER[hourIndex0]
+      };
+    }
+
+    function render(result) {
+      const profile = RESULT_DATA[result.finalResult];
+      els.modeBadge.textContent = result.modeLabel;
+      els.finalName.textContent = profile.name;
+      els.summaryText.textContent = `${profile.summary} ${profile.tendency}`;
+      els.solarText.textContent = result.solarText;
+      els.lunarText.textContent = result.lunarText;
+      els.monthPoint.textContent = result.monthPoint;
+      els.dayPoint.textContent = result.dayPoint;
+      els.hourPoint.textContent = result.hourPoint;
+      els.fortuneText.textContent = profile.tendency;
+      els.adviceText.textContent = profile.advice;
+      els.metaText.textContent = profile.element;
+      els.careerText.textContent = profile.career;
+      els.relationText.textContent = profile.relation;
+      els.healthText.textContent = profile.health;
+      document.getElementById("lostText").textContent = profile.lost;
+      els.resultCard.classList.add("show");
+    }
+
+    function runCurrentTime() {
+      const now = new Date();
+      const lunar = getLunarInfo(now);
+      const shichenNumber = getShichenIndex(now.getHours());
+      const shichenName = SHICHEN_NAMES[shichenNumber - 1];
+      const result = calculateLiuren(lunar.monthNumber, lunar.dayNumber, shichenNumber);
+
+      els.randomBox.hidden = true;
+
+      render({
+        modeLabel: "当前时间起课",
+        solarText: formatSolar(now),
+        lunarText: `${lunar.monthText}${lunar.dayText} ${shichenName}`,
+        ...result
+      });
+    }
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function runRandomMode() {
+      const monthNumber = randomInt(1, 12);
+      const dayNumber = randomInt(1, 30);
+      const shichenNumber = randomInt(1, 12);
+      const shichenName = SHICHEN_NAMES[shichenNumber - 1];
+      const result = calculateLiuren(monthNumber, dayNumber, shichenNumber);
+
+      els.randomBox.hidden = false;
+      els.randomMonth.textContent = `月数 ${monthNumber}`;
+      els.randomDay.textContent = `日数 ${dayNumber}`;
+      els.randomHour.textContent = `时数 ${shichenNumber}`;
+
+      render({
+        modeLabel: "随机三数起课",
+        solarText: "未使用公历时间",
+        lunarText: `${CN_MONTHS[monthNumber - 1]}${CN_DAYS[dayNumber - 1]} ${shichenName}`,
+        ...result
+      });
+    }
+
+    els.timeBtn.addEventListener("click", () => {
+      try {
+        runCurrentTime();
+      } catch (error) {
+        alert(`${error.message}。如果你是在较旧浏览器中打开，请改用较新的 Safari 或 Chrome。`);
+      }
+    });
+
+    els.randomBtn.addEventListener("click", runRandomMode);
+
+    runCurrentTime();
+  </script>
+</body>
+</html>
