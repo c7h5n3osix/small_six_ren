@@ -555,39 +555,87 @@
       return match ? Number(match[0]) : null;
     }
 
-    function getLunarInfo(date) {
-      const formatter = new Intl.DateTimeFormat("zh-CN-u-ca-chinese", {
-        month: "long",
-        day: "long"
-      });
+    function getChineseDayText(dayNumber) {
+      return CN_DAYS[dayNumber - 1] || `${dayNumber}`;
+    }
+
+    function getChineseMonthText(monthNumber, isLeap = false) {
+      const base = CN_MONTHS[monthNumber - 1] || `${monthNumber}月`;
+      return isLeap ? `闰${base}` : base;
+    }
+
+    function readLunarByParts(date, options) {
+      const formatter = new Intl.DateTimeFormat("zh-CN-u-ca-chinese", options);
       const parts = typeof formatter.formatToParts === "function" ? formatter.formatToParts(date) : [];
-      let monthText = parts.find((part) => part.type === "month")?.value;
-      let dayText = parts.find((part) => part.type === "day")?.value;
+      const monthPart = parts.find((part) => part.type === "month")?.value;
+      const dayPart = parts.find((part) => part.type === "day")?.value;
 
-      if (!monthText || !dayText) {
-        const text = formatter.format(date);
-        const match = text.match(/(闰?[正一二三四五六七八九十冬腊十一十二\d]+月)([初十廿三一二四五六七八九\d]+)/);
-        if (!match) {
-          throw new Error("当前浏览器无法提取农历信息");
-        }
-        monthText = match[1];
-        dayText = match[2];
-      }
+      if (!monthPart && !dayPart) return null;
 
-      const monthNumber = parseChineseMonth(monthText);
-      const dayNumber = parseChineseDay(dayText);
-
-      if (!monthNumber || !dayNumber) {
-        throw new Error("当前浏览器返回的农历格式无法识别");
-      }
+      const monthNumber = monthPart ? parseChineseMonth(monthPart) : null;
+      const dayNumber = dayPart ? parseChineseDay(dayPart) : null;
+      const isLeap = monthPart ? monthPart.startsWith("闰") : false;
 
       return {
+        monthText: monthPart || (monthNumber ? getChineseMonthText(monthNumber, isLeap) : null),
+        dayText: dayPart || (dayNumber ? getChineseDayText(dayNumber) : null),
         monthNumber,
         dayNumber,
-        monthText,
-        dayText,
-        isLeap: monthText.startsWith("闰")
+        isLeap
       };
+    }
+
+    function getLunarInfo(date) {
+      const attempts = [
+        () => readLunarByParts(date, { month: "long", day: "numeric" }),
+        () => readLunarByParts(date, { month: "numeric", day: "numeric" }),
+        () => readLunarByParts(date, { month: "short", day: "numeric" })
+      ];
+
+      for (const attempt of attempts) {
+        try {
+          const result = attempt();
+          if (result?.monthNumber && result?.dayNumber) {
+            return {
+              monthNumber: result.monthNumber,
+              dayNumber: result.dayNumber,
+              monthText: result.monthText || getChineseMonthText(result.monthNumber, result.isLeap),
+              dayText: result.dayText || getChineseDayText(result.dayNumber),
+              isLeap: result.isLeap
+            };
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+
+      try {
+        const formatter = new Intl.DateTimeFormat("zh-CN-u-ca-chinese", {
+          month: "long",
+          day: "numeric"
+        });
+        const text = formatter.format(date);
+        const monthMatch = text.match(/(闰?[正一二三四五六七八九十冬腊十一十二\d]+月)/);
+        const dayMatch = text.match(/([初十廿三一二四五六七八九\d]{1,3})$/);
+        const monthText = monthMatch?.[1] || "";
+        const dayText = dayMatch?.[1] || "";
+        const monthNumber = parseChineseMonth(monthText);
+        const dayNumber = parseChineseDay(dayText);
+
+        if (monthNumber && dayNumber) {
+          return {
+            monthNumber,
+            dayNumber,
+            monthText: monthText || getChineseMonthText(monthNumber, monthText.startsWith("闰")),
+            dayText: dayText || getChineseDayText(dayNumber),
+            isLeap: monthText.startsWith("闰")
+          };
+        }
+      } catch (error) {
+        // Ignore fallback errors and throw unified message below.
+      }
+
+      throw new Error("当前浏览器暂不支持农历日期自动提取");
     }
 
     function calculateLiuren(monthNumber, dayNumber, shichenNumber) {
@@ -668,7 +716,7 @@
       try {
         runCurrentTime();
       } catch (error) {
-        alert(`${error.message}。如果你是在较旧浏览器中打开，请改用较新的 Safari 或 Chrome。`);
+        alert(`${error.message}。请先刷新网页；若仍失败，请改用较新的 Safari 或 Chrome 打开该网址。`);
       }
     });
 
